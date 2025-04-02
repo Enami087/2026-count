@@ -8,4 +8,4 @@
 倒计时](https://wangmeidong.github.io/2026-count/2026_countts.html)
 
 [# enami
-倒计时](https://wangmeidong.github.io/2026-count/enami.html)
+Enami](https://wangmeidong.github.io/2026-count/enami.html)
