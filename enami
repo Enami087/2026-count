@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人脑记忆与注意力互动演示</title>
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff4d4d;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #28a745;
+            --info: #17a2b8;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 导航系统 */
+        .nav-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-dots {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(106, 17, 203, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-dot.active {
+            background-color: var(--primary);
+            transform: scale(1.3);
+        }
+        
+        /* 幻灯片样式 */
+        .slide {
+            min-height: 100vh;
+            padding: 80px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+        }
+        
+        .slide-content {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 卡片设计 */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            font-size: 1.6rem;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(106, 17, 203, 0.3);
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(106, 17, 203, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .animate {
+            animation: slideUp 0.8s ease forwards;
+        }
+        
+        /* 测试区域样式 */
+        .test-area {
+            background: rgba(248, 249, 250, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px dashed var(--info);
+        }
+        
+        .test-question {
+            margin-bottom: 20px;
+        }
+        
+        .test-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .test-option {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .test-option:hover {
+            border-color: var(--info);
+        }
+        
+        .test-option.selected {
+            background-color: var(--info);
+            color: white;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 60px 20px;
+            }
+            
+            .slide-content {
+                padding: 30px 20px;
+            }
+            
+            .test-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-container {
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .nav-dots {
+                flex-direction: row;
+            }
+        }
+        
+        /* 特殊元素 */
+        .neuron-animation {
+            width: 100%;
+            height: 300px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300"><path d="M100,150 Q250,50 400,150 T700,150" stroke="%236a11cb" fill="none" stroke-width="3" stroke-dasharray="10,5"/><circle cx="100" cy="150" r="8" fill="%232575fc"/><circle cx="400" cy="150" r="8" fill="%232575fc"/><circle cx="700" cy="150" r="8" fill="%232575fc"/></svg>') no-repeat center;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .pulse {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            opacity: 0;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* 图标库 */
+        .icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-container">
+        <div class="nav-dots">
+            <div class="nav-dot active" data-slide="0"></div>
+            <div class="nav-dot" data-slide="1"></div>
+            <div class="nav-dot" data-slide="2"></div>
+            <div class="nav-dot" data-slide="3"></div>
+            <div class="nav-dot" data-slide="4"></div>
+            <div class="nav-dot" data-slide="5"></div>
+            <div class="nav-dot" data-slide="6"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 封面 -->
+        <div class="slide active" id="slide-0">
+            <div class="slide-content">
+                <h1 style="font-size: 2.8rem; margin-bottom: 20px; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center;">人脑记忆与注意力运作机制</h1>
+                <p style="text-align: center; font-size: 1.2rem; color: var(--dark); margin-bottom: 40px;">探索大脑认知功能的奥秘与提升策略</p>
+                
+                <div style="text-align: center; margin-top: 50px;">
+                    <button class="btn" onclick="nextSlide()">开始探索</button>
+                </div>
+                
+                <div style="position: absolute; bottom: 20px; right: 20px; font-size: 0.9rem; color: #6c757d;">
+                    <span>使用导航点或键盘方向键浏览</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 记忆系统分类 -->
+        <div class="slide" id="slide-1">
+            <div class="slide-content">
+                <h2 style="color: var(--primary); margin-bottom: 30px; display: flex; align-items: center;">
+                    <span class="icon">🧠</span>
+                    记忆系统的分类与神经基础
+                </h2>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">⏳</span>
+                        感觉记忆
+                    </div>
+                    <p>持续时间极短(毫秒至几秒)，容量大但易消退。视觉感觉记忆(图像记忆)约持续250-500毫秒，听觉感觉记忆(回声记忆)约持续2-4秒。</p>
+                    <p><strong>神经基础：</strong>初级感觉皮层(如V1区、A1区)</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">📝</span>
+                        工作记忆(短时记忆)
+                    </div>
+                    <p>持续时间约15-30秒，容量有限(7±2个信息组块)。负责信息的暂时保持和加工。</p>
+                    <p><strong>神经基础：</strong>前额叶皮层(PFC)、顶叶皮层</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">🗄️</span>
+                        长时记忆
+                    </div>
+                    <p>分为陈述性记忆(外显)和非陈述性记忆(内隐)，持续时间从几分钟到终身。</p>
+                    <p><strong>神经基础：</strong>海马体(记忆巩固)、大脑皮层(存储)、小脑(程序性记忆)</p>
+                </div>
+                
+                <div class="neuron-animation" id="memory-neuron">
+                    <!-- 神经元动画将通过JS添加 -->
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-outline" onclick="prevSlide()">上一页</button>
+                    <button class="btn" onclick="nextSlide()">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 注意力系统 -->
+        <div class="slide" id="slide-2">
+            <div class="slide-content">
+                <h2 style="color: var(--primary); margin-bottom: 30px; display: flex; align-items: center;">
+                    <span class="icon">🔍</span>
+                    注意力系统的类型与神经基础
+                </h2>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">🎯</span>
+                        选择性注意
+                    </div>
+                    <p>在多个刺激中选择特定信息进行加工，如"鸡尾酒会效应"。</p>
+                    <p><strong>神经基础：</strong>顶叶皮层、上丘脑、前额叶皮层</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">⏱️</span>
+                        持续性注意
+                    </div>
+                    <p>在一段时间内保持对任务的专注，如长时间阅读。</p>
+                    <p><strong>神经基础：</strong>右半球额顶网络、蓝斑核(去甲肾上腺素系统)</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">
+                        <span class="icon">🔄</span>
+                        分配性注意
+                    </div>
+                    <p>同时处理多个任务的能力，如边开车边交谈。</p>
+                    <p><strong>神经基础：</strong>前扣带回皮层、前额叶皮层</p>
+                </div>
+                
+                <div class="test-area" id="attention-test">
+                    <h3 style="color: var(--secondary); margin-bottom: 15px;">注意力测试</h3>
+                    <p>观察以下数字3秒钟，然后回答后面的问题：</p>
+                    <div style="background: white; padding: 15px; border-radius: 10px; text-align: center; font-size: 1.5rem; margin: 15px 0; letter-spacing: 5px;">
+                        7 2 9 4 1 5
+                    </div>
+                    <div id="attention-questions" style="display: none;">
+                        <div class="test-question">
+                            <p>第三个数字是什么？</p>
+                            <div class="test-options">
+                                <div class="test-option" onclick="checkAttentionAnswer(1, 9)">9</div>
+                                <div class="test-option" onclick="checkAttentionAnswer(1, 2)">2</div>
+                                <div class="test-option" onclick="checkAttentionAnswer(1, 7)">7</div>
+                                <div class="test-option" onclick="checkAttentionAnswer(1, 4)">4</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn" id="start-attention-test" onclick="startAttentionTest()">开始测试</button>
+                    <div id="attention-result" style="margin-top: 15px; display: none;"></div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-outline" onclick="prevSlide()">上一页</button>
+                    <button class="btn" onclick="nextSlide()">下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 记忆与注意力的关系 -->
+        <div class="slide" id="slide-3">
+            <div class="slide-content">
+                <h2 style="color: var(--primary); margin-bottom: 30px; display: flex; align-items: center;">
+                    <span class="icon">⚖️</span>
+                    记忆与注意力的关系
+                </h2>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+                    <div style="flex: 1; min-width: 300px;">
+                        <h3 style="color: var(--secondary); margin-bottom: 15px;">注意力对记忆的影响</h3>
+                        <ul style="line-height: 1.8; padding-left: 20px;">
+                            <li><strong>编码阶段：</strong>注意力决定哪些信息能进入工作记忆</li>
+                            <li><strong>巩固阶段：</strong>集中注意力促进记忆的长期存储</li>
+                            <li><strong>提取阶段：</strong>注意力帮助从记忆中检索相关信息</li>
+                        </ul>
+                    </div>
+                    <div style="flex: 1; min-width: 300px;">
+                        <h3 style="color: var(--secondary); margin-bottom: 15px;">记忆对注意力的影响</h3>
+                        <ul style="line-height: 1.8; padding-left: 20px;">
+                            <li><strong>工作记忆：</strong>保持任务相关信息指导注意力分配</li>
+                            <li><strong>长时记忆：</strong>提供知识背景引导注意力的方向</li>
+                            <li><strong>预期效应：</strong>基于记忆的预测影响注意力分配</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="card" style="background: linear-gradient(135deg, rgba(106,17,203,0.1) 0%, rgba(37,117,252,0.1) 100%);">
+                    <div class="card-title">
+                        <span class="icon">🧩</span>
+                        神经机制的交集
+                    </div>
+                    <p>前额叶皮层(PFC)
